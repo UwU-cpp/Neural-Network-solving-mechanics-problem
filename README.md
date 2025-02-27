@@ -1,0 +1,1 @@
+# Neural-Network-solving-mechanics-problem
