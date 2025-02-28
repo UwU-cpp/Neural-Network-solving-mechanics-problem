@@ -1,1 +1,4 @@
 # Neural-Network-solving-mechanics-problem
+This neural network is solving a mechanic's problem. The problem's answer equals v_0 *(1 - (sin_alpha)^2)^0.5 * (2 * (H + (v_0^2*sin_alpha^2)/(2*g))/g)^0.5. The inputs for training and testing the neural network are calculating in write_train_test.py. Then this data is transfered to input_train.csv and input_test.csv. This files are used as data bases. 
+In neural netwrok there are 3 hidden layers it is caused by the non-linear solution of the problem. Also every layer has 2^n neurons because it is easier to calculate number of parameters for number of input data. The activation function was chosen Leaky ReLU because the problem needs numerical answer. Also Leaky ReLU is easy to calculate and the gradient is also simple to calculate.
+Also I normalized the input data because if inout data is big enough the gradient can go to infinity.
