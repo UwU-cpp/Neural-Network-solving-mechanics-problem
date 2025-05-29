@@ -22,16 +22,14 @@ class NeuralNetwork:
         self.onodes = output_nodes
         self.lr = learning_rate
 
-        # Используем He-инициализацию для слоёв с Leaky ReLU
         self.wih1 = np.random.normal(0.0, np.sqrt(2.0 / self.inodes),
                                      (self.hnodes1, self.inodes))
-        self.bias1 = np.zeros((self.hnodes1,))  # bias первого скрытого слоя
+        self.bias1 = np.zeros((self.hnodes1,))  
 
         self.wh1h2 = np.random.normal(0.0, np.sqrt(2.0 / self.hnodes1),
                                       (self.hnodes2, self.hnodes1))
         self.bias2 = np.zeros((self.hnodes2,))
         
-        # Аналогично для последующих слоёв...
         self.wh2h3 = np.random.normal(0.0, np.sqrt(2.0 / self.hnodes2),
                                       (self.hnodes3, self.hnodes2))
         self.bias3 = np.zeros((self.hnodes3,))
@@ -56,16 +54,15 @@ class NeuralNetwork:
                                       (self.onodes, self.hnodes7))
         self.bias_out = np.zeros((self.onodes,))
         
-        # Leaky ReLU для скрытых слоёв
+  
         self.activation_function = lambda x: np.where(x >= 0, x, 0.01 * x)
-        # Для выходного слоя – линейная функция (identity) для задач регрессии
+       
         self.output_activation = lambda x: x
 
     def train(self, inputs_batch, targets_batch):
         inputs = np.array(inputs_batch, dtype=np.float32)
         targets = np.array(targets_batch, dtype=np.float32).reshape(-1, 1)
         
-        # --- Прямое распространение ---
         hidden1_inputs = np.dot(inputs, self.wih1.T) + self.bias1
         hidden1_outputs = self.activation_function(hidden1_inputs)
         
@@ -88,20 +85,17 @@ class NeuralNetwork:
         hidden7_outputs = self.activation_function(hidden7_inputs)
         
         final_inputs = np.dot(hidden7_outputs, self.who.T) + self.bias_out
-        # Выходной слой – линейная функция
+        
         final_outputs = self.output_activation(final_inputs)
         
-        # --- Обратное распространение ---
-        # Для регрессии часто используется MSE (среднеквадратичная ошибка)
-        error = targets - final_outputs  # ошибка на выходе
+        error = targets - final_outputs 
         
-        # Производная линейной функции равна 1
-        grad_output = error  # если использовать MSE, можно напрямую брать ошибку
+       
+        grad_output = error 
         
-        # Ошибка и градиенты для слоя между hidden7 и output
         hidden7_errors = np.dot(grad_output, self.who)
         threshold = 0.5         
-        # Градиент для слоев вычисляем с учётом производной Leaky ReLU
+        
         grad_hidden7 = hidden7_errors * np.where(hidden7_outputs >= 0, 1.0, 0.01)
         grad_hidden7 = np.clip(grad_hidden7, -threshold, threshold)
         hidden6_errors = np.dot(grad_hidden7, self.wh6h7)
@@ -123,8 +117,7 @@ class NeuralNetwork:
         grad_hidden1 = hidden1_errors * np.where(hidden1_outputs >= 0, 1.0, 0.01)
         grad_hidden1 = np.clip(grad_hidden1, -threshold, threshold)
         
-        # --- Обновление весов и смещений ---
-        # Выходной слой
+
         self.who   += self.lr * np.dot(grad_output.T, hidden7_outputs)
         self.bias_out += self.lr * np.sum(grad_output, axis=0)
         
@@ -177,9 +170,7 @@ class NeuralNetwork:
         final_outputs = self.output_activation(final_inputs)
         return final_outputs
 
-# Остальная часть кода (загрузка данных, обучение, тестирование) остается без принципиальных изменений.
 
-# Параметры сети
 input_nodes = 7
 hidden_nodes_1 = 512
 hidden_nodes_2 = 512
@@ -194,7 +185,7 @@ learning_rate = 0.001
 epochs = 500
 batch_size = 32
 
-# Загрузка train-данных
+
 inputs_1 = []
 with open('input_train.csv', 'r', newline='') as file:
     reader = csv.reader(file)
@@ -212,18 +203,18 @@ y_train = inputs_1_normalized[:, 7:]
 
 n_samples = X_train.shape[0]
 
-# Инициализация сети
+
 n = NeuralNetwork(input_nodes, hidden_nodes_1, hidden_nodes_2,
                   hidden_nodes_3, hidden_nodes_4, hidden_nodes_5,
                   hidden_nodes_6, hidden_nodes_7,
                   output_nodes, learning_rate)
 
-# Обучение
+
 initial_lr = n.lr
 decay_rate = 0.99
 for epoch in tqdm(range(epochs)):
 
-    # Снижение lr
+    
     n.lr = initial_lr * (decay_rate ** epoch)
 
     permutation = np.random.permutation(n_samples)
@@ -240,17 +231,14 @@ for epoch in tqdm(range(epochs)):
         X_batch = X_train[start_ind:end_ind]
         y_batch = y_train[start_ind:end_ind]
 
-        # Шаг обучения
         n.train(X_batch, y_batch)
 
-        # Подсчёт ошибки в данном батче
         outputs_batch = n.query(X_batch)
         nonzero = (y_batch != 0)
         error_batch = np.abs(y_batch[nonzero] - outputs_batch[nonzero]) / y_batch[nonzero] * 100
 
  
-        # Чтобы сложить с total_error (float), приведём cupy-скаляр к float
-        batch_error_val = np.sum(error_batch).item()  # .item() даст обычный float
+        batch_error_val = np.sum(error_batch).item() 
         total_error += batch_error_val
 
     mean_error = total_error / n_samples
@@ -259,7 +247,6 @@ for epoch in tqdm(range(epochs)):
 
 print("Обучение завершено")
 
-# Тестовые данные
 input_test_list = []
 with open('input_test.csv', 'r', newline='') as file:
     reader = csv.reader(file)
@@ -272,9 +259,9 @@ input_test_normalized = input_test_list / max_values
 X_test = input_test_normalized[:, :7]
 y_test = input_test_normalized[:, 7:]
 
-# Предсказания
+
 predictions_normalized = n.query(X_test)
-predictions = predictions_normalized * max_values[7]  # возвр. масштаб
+predictions = predictions_normalized * max_values[7] 
 
 true_values = input_test_list[:, 7]
 
@@ -289,22 +276,21 @@ for i in range(number_of_tests):
     print(f"Правильный ответ: {ans:.2f}")
 
     if ans != 0:
-        # pred и ans могут быть 0d cupy-скалярами,
-        # поэтому берем item() или float()
+
         error_val = float(abs(pred - ans) / ans * 100)
     else:
         error_val = 0
 
     procent_of_fails_list.append(error_val)
 
-# Вычисление средней процентной ошибки вручную
+
 sum_error = 0.0
 for val in procent_of_fails_list:
     sum_error += val
 
 mean_error = sum_error / len(procent_of_fails_list)
 
-# Вывод финальной информации
+
 print(f"\nКоэффициент обучения (финальный): {n.lr}")
 print(f"Количество эпох: {epochs}")
 print(f"Средняя процентная ошибка (тест): {mean_error:.2f}%")
